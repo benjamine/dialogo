@@ -1,9 +1,9 @@
 Dialogo
 =========
 
-> (spanish for dialogue) "to discuss areas of disagreement frankly in order to resolve them." -- [Dictionary.com](http://dictionary.reference.com/browse/dialogue)
+> ([Diálogo](http://es.wikipedia.org/wiki/Di%C3%A1logo), spanish for dialogue) "to discuss areas of disagreement frankly in order to resolve them." -- [Dictionary.com](http://dictionary.reference.com/browse/dialogue)
 
-Dialogue supports realtime collaboration apps. It's an Javascript implementation [Differential Synchronization](https://neil.fraser.name/writing/sync/) that works on browsers and node.js.
+Dialogo supports realtime collaboration apps. It's a Javascript implementation of [Differential Synchronization](https://neil.fraser.name/writing/sync/) that works on browsers and node.js.
 
 Installation
 ------------
