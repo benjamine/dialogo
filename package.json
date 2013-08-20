@@ -1,0 +1,28 @@
+{
+  "name": "dialogo",
+  "version": "0.0.1",
+  "description": "Javascript Differential Synchronization",
+  "main": "./src/dialogo.js",
+  "scripts": {
+    "test": "node ./node_modules/mocha/bin/mocha --growl --check-leaks --reporter spec",
+    "testpage": "cp ./node_modules/mocha/mocha.js ./test/modules/mocha.js && cp ./node_modules/mocha/mocha.css ./test/modules/mocha.css && cp ./node_modules/expect.js/expect.js ./test/modules/expect.js && start ./test/test.html",
+    "monitor": "node ./node_modules/mocha/bin/mocha --growl --watch --check-leaks --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/benjamine/dialogo.git"
+  },
+  "keywords": [
+    "dialogo",
+    "differential",
+    "synchronization",
+    "realtime",
+    "collaboration"
+  ],
+  "author": "Benjamin Eidelman",
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "~1.12.0",
+    "expect.js": "~0.2.0"
+  }
+}

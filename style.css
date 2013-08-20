@@ -1,0 +1,38 @@
+body {
+    font-family: Georgia, serif;
+}
+
+h1 {
+    margin: 30px;
+}
+
+a#fork_me {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+#main div {
+	font-size: x-large;
+    text-align: center;
+    margin: 40px;  
+}
+
+footer {
+    font-size: small;
+    text-align: center;
+    margin: 40px;    
+}
+
+.credits {
+    font-size: smaller;
+}
+
+.credits a {
+    text-decoration: none;
+    color: black;
+}
+
+.credits a:hover {
+    text-decoration: underline;
+}
