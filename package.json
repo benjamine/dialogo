@@ -1,8 +1,8 @@
 {
   "name": "dialogo",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Javascript Differential Synchronization",
-  "main": "./src/dialogo.js",
+  "main": "./src/main.js",
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha --growl --check-leaks --reporter spec",
     "testpage": "cp ./node_modules/mocha/mocha.js ./test/modules/mocha.js && cp ./node_modules/mocha/mocha.css ./test/modules/mocha.css && cp ./node_modules/expect.js/expect.js ./test/modules/expect.js && start ./test/test.html",
@@ -24,5 +24,8 @@
   "devDependencies": {
     "mocha": "~1.12.0",
     "expect.js": "~0.2.0"
+  },
+  "dependencies": {
+    "jsondiffpatch": "^0.1.5"
   }
 }
