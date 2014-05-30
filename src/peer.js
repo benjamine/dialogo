@@ -6,10 +6,18 @@ var Document = require('./document').Document;
 
 function Peer(name, document){
   events.EventEmitter.call(this);
-  this.name = name;
-  this.document = document || Document.empty;
-  this.inbox = [];
-  this.outbox = [];
+  if (name instanceof Document) {
+    this.document = name;
+  } else {
+    this.name = name;
+    this.document = document || Document.empty;
+  }
+  this.counters = {
+    messages: {
+      sent: 0,
+      received: 0
+    }
+  };
   this.createShadow();
   this.watchInterval = Peer.defaults.watchInterval;
   this.debug = Peer.defaults.debug;
@@ -29,6 +37,25 @@ Peer.prototype.log = function() {
   }
 };
 
+Peer.prototype.syncBroken = function () {
+  if (!this.synchronized) {
+    return;
+  }
+  this.synchronized = false;
+  this.emit('unsync');
+  this.stop();
+};
+
+Peer.prototype.syncComplete = function () {
+  if (this.synchronized) {
+    return;
+  }
+  this.synchronized = true;
+  this.log('sync complete');
+  this.emit('sync');
+  this.watch();
+};
+
 Peer.prototype.use = function(doc) {
   this.log('document loaded locally:', doc.url);
   this.document = doc;
@@ -40,11 +67,12 @@ Peer.prototype.use = function(doc) {
       req.callback();
     }
   }
-  this.watch();
+  this.syncComplete();
 };
 
 Peer.prototype.load = function(url, options, callback) {
   var opt = options || {};
+  var self = this;
   if (typeof options === 'function') {
     callback = options;
     opt = {};
@@ -57,6 +85,18 @@ Peer.prototype.load = function(url, options, callback) {
   if (opt && opt.local) {
     this.emit('load', url, callback);
     if (!this.loading) {
+      if (this.storage) {
+        this.loading = true;
+        this.storage.get(url, options, function(err, doc) {
+          self.loading = false;
+          if (err) {
+            callback(err);
+            return;
+          }
+          self.use(doc);
+        });
+        return;
+      }
       this.log('no loader for', url);
       callback(new Error('no loader'));
     }
@@ -70,6 +110,7 @@ Peer.prototype.createShadow = function() {
 };
 
 Peer.prototype.send = function(message) {
+  this.counters.messages.sent++;
   this.emit('message', message);
   this.lastSent = message;
   this.waitingResponse = true;
@@ -79,6 +120,7 @@ Peer.prototype.receive = function(message) {
   var self = this;
   this.waitingResponse = false;
   this.responding = true;
+  this.counters.messages.received++;
   message.responseTo = this.lastSent;
   this.respond(message, function(err, response){
     if (err) {
@@ -119,7 +161,7 @@ Peer.prototype.scan = function(){
     if (!delta) {
       return;
     }
-    self.stop();
+    self.syncBroken();
     if (self.isBusy()) {
       self.log('ping');
       self.send({ ping: true });
@@ -140,12 +182,6 @@ Peer.prototype.watch = function (start) {
   }
   var self = this;
   this.watchTimer = setInterval(function(){
-    /*
-    if (!self.syncComplete) {
-      self.stop();
-      return;
-    }
-    */
     if (self.isPaused) {
       return;
     }
@@ -214,10 +250,7 @@ Peer.prototype.respond = function(message, callback) {
     this.log('got noop');
     // no changes on the other peer
     if ((message.responseTo && message.responseTo.noop) && !this.alwaysRespondNoops) {
-      // sync complete
-      this.log('sync complete');
-      this.emit('sync');
-      this.watch();
+      this.syncComplete();
       callback();
       return;
     }
@@ -238,9 +271,7 @@ Peer.prototype.respond = function(message, callback) {
     this.getChanges(function(delta) {
       if (!delta) {
         if (message.noop) {
-          self.log('sync complete');
-          self.emit('sync');
-          self.watch();
+          self.syncComplete();
         }
         sendNoop();
         return;
@@ -309,7 +340,7 @@ Peer.prototype.respond = function(message, callback) {
     this.document.url = message.document.url;
     this.createShadow();
     this.log('got document', this.document);
-    this.watch();
+    this.syncComplete();
     callback();
     if (req && req.callback) {
       req.callback();
@@ -324,8 +355,7 @@ Peer.prototype.respond = function(message, callback) {
 
 Peer.prototype.bindTo = function (peer, options) {
   var self = this;
-  if (peer instanceof Peer) {
-    // bind directly to another Peer
+  if (peer && typeof peer.on === 'function') {
     var artificialDelay = Math.max(options && options.artificialDelay, 1);
     peer.on('message', function(message) {
       setTimeout(function(){
@@ -333,8 +363,8 @@ Peer.prototype.bindTo = function (peer, options) {
       }, artificialDelay);
     });
     this.boundTo = peer;
-    if (!peer.boundTo) {
-      peer.bindTo(self);
+    if (peer instanceof Peer && !peer.boundTo) {
+      peer.bindTo(self, options);
     }
     return;
   }

@@ -1,3 +1,4 @@
+var jsondiffpatch = require('jsondiffpatch');
 
 function Document(root, version) {
   this.root = typeof root == 'undefined' ? null : root;
@@ -6,7 +7,7 @@ function Document(root, version) {
 
 Document.prototype.clone = function () {
   var doc = new Document(
-    JSON.parse(JSON.stringify(this.root)),
+    JSON.parse(JSON.stringify(this.root), jsondiffpatch.dateReviver),
     this.version
   );
   doc.url = this.url;
