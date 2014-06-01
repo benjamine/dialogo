@@ -24,14 +24,6 @@
     "node": ">=0.10"
   },
   "devDependencies": {
-    "mocha": "~1.12.0",
-    "expect.js": "~0.2.0"
-  },
-  "dependencies": {
-    "jsondiffpatch": "~0.1.6",
-    "socket.io": "~1.0.2"
-  },
-  "devDependencies": {
     "expect.js": "~0.3.1",
     "karma-script-launcher": "~0.1.0",
     "karma-chrome-launcher": "~0.1.2",
@@ -56,6 +48,11 @@
     "jshint-stylish": "~0.1.5",
     "gulp-replace": "~0.2.0",
     "gulp-plumber": "~0.5.6"
+  },
+  "dependencies": {
+    "gulp": "^3.5.6",
+    "jsondiffpatch": "~0.1.6",
+    "socket.io": "~1.0.2"
   },
   "homepage": "https://github.com/benjamine/dialogo"
 }
