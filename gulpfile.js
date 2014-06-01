@@ -68,7 +68,7 @@ bundle({
 
 bundle({
     name: 'test-bundle',
-    src: './test/*.js',
+    src: './test/test.js',
     minify: false
 });
 

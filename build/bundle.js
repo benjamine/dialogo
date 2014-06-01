@@ -4360,6 +4360,7 @@ Document.notFound.notFound = true;
 exports.Document = Document;
 
 },{"jsondiffpatch":19}],23:[function(_dereq_,module,exports){
+(function (process){
 
 var Document = _dereq_('./document').Document;
 var Peer = _dereq_('./peer').Peer;
@@ -4370,7 +4371,15 @@ exports.Peer = Peer;
 exports.Storage = Storage;
 exports.jsondiffpatch = _dereq_('jsondiffpatch');
 
-},{"./document":22,"./peer":24,"./storage":25,"jsondiffpatch":19}],24:[function(_dereq_,module,exports){
+
+var inNode = typeof process !== 'undefined' && typeof process.execPath === 'string';
+if (!inNode) {
+	exports.homepage = 'https://github.com/benjamine/dialogo';
+	exports.version = '0.0.2';
+}
+
+}).call(this,_dereq_("1YiZ5S"))
+},{"./document":22,"./peer":24,"./storage":25,"1YiZ5S":3,"jsondiffpatch":19}],24:[function(_dereq_,module,exports){
 var events = _dereq_('events');
 var jsondiffpatch = _dereq_('jsondiffpatch');
 var util = _dereq_('util');

@@ -1,7 +1,7 @@
 /* global require, describe, before, it */
 var expect = (typeof window !== 'undefined' && window.expect) ? window.expect : require('expect.js');
-var jsondiffpatch = jsondiffpatch || require('' + 'jsondiffpatch');
-var dialogo = dialogo || require('../src' + '/main');
+var dialogo = (typeof window !== 'undefined') ? window.dialogo : require('../src/' + 'main.js');
+var jsondiffpatch = dialogo.jsondiffpatch;
 
 var testutil = require('./testutil');
 expect.Assertion.prototype.deepEqual = testutil.assertionDeepEqual;

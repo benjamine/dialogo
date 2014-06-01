@@ -1,5 +1,6 @@
 
-var jsondiffpatch = jsondiffpatch || require('jsondiffpatch');
+var dialogo = (typeof window !== 'undefined') ? window.dialogo : require('../src/' + 'main.js');
+var jsondiffpatch = dialogo.jsondiffpatch;
 
 var isArray = (typeof Array.isArray === 'function') ?
     // use native function
