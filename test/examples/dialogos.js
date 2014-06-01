@@ -16,7 +16,7 @@ var exampleObject1 = {
 
 examples.load = [
   {
-    name: 'remote',
+    name: 'existing',
     peers: {
       a: {
         load: 'example',
@@ -42,10 +42,42 @@ examples.load = [
       }
     }
   },
+  {
+    name: 'new',
+    peers: {
+      a: {
+        load: {
+          url: 'example',
+          options: {
+            create: true
+          }
+        },
+        patch: [null, clone(exampleObject1)]
+      },
+      b: {
+        hub: true,
+        storage: {
+        }
+      }
+    },
+    result: {
+      stats: {
+        messages: {
+          sent: {
+            max: 2,
+            total: 4
+          }
+        }
+      },
+      alldocs: {
+        root: clone(exampleObject1)
+      }
+    }
+  },
   0
 ];
 
-examples.one_side_change = [
+examples.oneSideChange = [
   {
     name: 'property add',
     peers: {
@@ -83,7 +115,7 @@ examples.one_side_change = [
   0
 ];
 
-examples.both_side_changes = [
+examples.bothSideChanges = [
   {
     name: 'different properties added',
     peers: {

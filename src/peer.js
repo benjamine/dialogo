@@ -60,6 +60,7 @@ Peer.prototype.use = function(doc) {
   this.log('document loaded locally:', doc.url);
   this.document = doc;
   this.createShadow();
+  this.emit('loaded');
   var req = this.documentRequest;
   if (req) {
     this.documentRequest = null;
@@ -87,7 +88,7 @@ Peer.prototype.load = function(url, options, callback) {
     if (!this.loading) {
       if (this.storage) {
         this.loading = true;
-        this.storage.get(url, options, function(err, doc) {
+        this.storage.get(url, opt, function(err, doc) {
           self.loading = false;
           if (err) {
             callback(err);
@@ -97,11 +98,55 @@ Peer.prototype.load = function(url, options, callback) {
         });
         return;
       }
-      this.log('no loader for', url);
-      callback(new Error('no loader'));
+      this.log('no document loader for', url);
+      callback(new Error('no document loader'));
     }
   } else {
     this.scan();
+  }
+};
+
+Peer.prototype.save = function(url, options, callback) {
+  var opt = options || {};
+  var self = this;
+  if (typeof options === 'function') {
+    callback = options;
+    opt = {};
+  }
+  this.saveRequest = {
+    url: url,
+    options: opt,
+    callback: callback
+  };
+  this.emit('save', url, callback);
+  if (!this.saving) {
+    if (this.storage) {
+      this.saving = true;
+      this.storage.put(url, this.document, options, function(err, url) {
+        self.saving = false;
+        if (err) {
+          callback(err);
+          return;
+        }
+        self.document.url = url;
+        self.saved();
+      });
+      return;
+    }
+    this.log('no document saver for', url);
+    callback(new Error('no document saver'));
+  }
+};
+
+Peer.prototype.saved = function() {
+  var doc = this.document;
+  this.log('document saved locally:', doc.url);
+  var req = this.saveRequest;
+  if (req) {
+    this.saveRequest = null;
+    if (req.callback) {
+      req.callback();
+    }
   }
 };
 
@@ -144,6 +189,7 @@ Peer.prototype.scan = function(){
   if (this.responding) {
     return;
   }
+
   if (!this.waitingResponse && this.documentRequest) {
     if (!this.documentRequest.options.local && !this.documentRequest.sent) {
       this.log('requesting document', this.documentRequest.url);
@@ -153,6 +199,19 @@ Peer.prototype.scan = function(){
         options: this.documentRequest.options
       });
       this.documentRequest.sent = true;
+    }
+    return;
+  }
+
+  if (!this.waitingResponse && this.saveRequest) {
+    if (!this.saveRequest.options.local && !this.saveRequest.sent) {
+      this.log('requesting to save document as', this.saveRequest.url);
+      this.send({
+        save: true,
+        url: this.saveRequest.url,
+        options: this.saveRequest.options
+      });
+      this.saveRequest.sent = true;
     }
     return;
   }
@@ -176,7 +235,7 @@ Peer.prototype.scan = function(){
   });
 };
 
-Peer.prototype.watch = function (start) {
+Peer.prototype.watch = function () {
   if (this.watchTimer) {
     return;
   }
@@ -225,24 +284,45 @@ Peer.prototype.getChanges = function (callback) {
 };
 
 Peer.prototype.respond = function(message, callback) {
+  this.peerError = null;
   var self = this;
   var sendNoop = function(){
     callback(null, { noop: true });
   };
 
+  var req;
+
+  // respond to peer error
+  if (message.error) {
+    this.log('got peer error: ' + message.error);
+    this.peerError = message.error;
+    callback();
+    return;
+  }
+
   // respond to a delta
   if (message.delta) {
     this.log('patching...');
-    // exact patch
-    jsondiffpatch.patch(this.shadow.root, message.delta);
-    // best-effort patch
-    jsondiffpatch.patch(this.document.root, message.delta);
+    try {
+      // exact patch
+      this.shadow.root = jsondiffpatch.patch(this.shadow.root, message.delta);
+    } catch (err) {
+      // out-of-sync TODO: reload the full doc
+      this.log('patch error: ', err);
+    }
+    try {
+      // best-effort patch
+      this.document.root = jsondiffpatch.patch(this.document.root, message.delta);
+    } catch (err) {
+      this.log('patch error (best-effort): ', err);
+    }
     if (message.version && this.document.version <= message.version) {
       this.document.version = message.version;
     } else {
       this.document.version++;
     }
     this.log('result:', this.document);
+    this.emit('change');
   }
 
   // respond to noop (peer has no changes)
@@ -267,7 +347,7 @@ Peer.prototype.respond = function(message, callback) {
   }
 
   // respond to this messages sending changes (if any)
-  if (message.noop || message.delta || message.ping) {
+  if (message.noop || message.delta || message.ping || message.saved) {
     this.getChanges(function(delta) {
       if (!delta) {
         if (message.noop) {
@@ -304,12 +384,14 @@ Peer.prototype.respond = function(message, callback) {
     };
     if (this.document.isEmpty || (url && this.document.url !== url)) {
       this.log('loading', url);
-      this.load(url, { local: true }, function(err) {
+      var loadOptions = message.options || {};
+      loadOptions.local = true;
+      this.load(url, loadOptions, function(err) {
         if (err) {
           self.log('error loading document');
           callback(null, {
             error: err.message,
-            name: name
+            url: url
           });
           return;
         }
@@ -327,7 +409,7 @@ Peer.prototype.respond = function(message, callback) {
   // respond to full document
   if (message.document) {
     // peer sent the full document
-    var req = this.documentRequest;
+    req = this.documentRequest;
     if (req && req.sent) {
       this.documentRequest = null;
     }
@@ -340,6 +422,7 @@ Peer.prototype.respond = function(message, callback) {
     this.document.url = message.document.url;
     this.createShadow();
     this.log('got document', this.document);
+    this.emit('loaded');
     this.syncComplete();
     callback();
     if (req && req.callback) {

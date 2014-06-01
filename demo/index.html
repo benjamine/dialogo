@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Dialogo</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <link rel="stylesheet" href="style.css" type="text/css" media="screen" />
+        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/codemirror/3.21.0/codemirror.min.css" type="text/css" media="screen" />
+        <script type='text/javascript' src='../build/bundle.js'>
+        </script>
+        <script type='text/javascript' src='../external/jsondiffpatch.js'>
+        </script>
+        <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/codemirror/3.21.0/codemirror.js"></script>
+        <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/codemirror/3.21.0/mode/javascript/javascript.min.js"></script>
+    </head>
+    <body>
+        <a href='https://github.com/benjamine/dialogo' id='fork_me'>
+            <img alt='Fork me on GitHub' src='http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png'>
+        </a>
+        <header>
+            <h1>Dialogo</h1>
+            <span id="description"></span>
+            <a id="external-link" style="display: none;">source</a>
+        </header>
+        <div class="buttons">
+            <div>
+                <input id="swap" type="button" value="Swap">
+                <input id="clear" type="button" value="Clear">
+            </div>
+        </div>
+        <div class="json-input">
+            <div id="json-panel-left">
+                <label for="json-input-left">
+                    <h2>JSON Left</h2>
+                </label>
+                <button class="prettyfy" type="button" title="Pretty print">{ }</button>
+                <textarea id="json-input-left">
+                    loading...
+                </textarea>
+                <span class="error-message"></span>
+            </div>
+            <div id="json-panel-right">
+                <label for="json-input-right">
+                    <h2>JSON Right</h2>
+                </label>
+                <button class="prettyfy" type="button" title="Pretty print">{ }</button>
+                <textarea id="json-input-right">
+                    loading...
+                </textarea>
+                <span class="error-message"></span>
+            </div>
+        </div>
+        <div id="results">
+            <h2>Results</h2>
+            <div>
+            </div>
+        </div>
+        <footer>
+            <a href="https://github.com/benjamine/dialogo">Get Dialogo</a><br>
+            <p class="credits">Dialogo was developed by <a href="http://twitter.com/beneidel">Benjamin Eidelman</a></p>
+        </footer>
+        <script type="text/javascript" src="demo.js"></script>
+    </body>
+</html>

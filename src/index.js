@@ -1,63 +1,63 @@
 
-var Document = require('./document').Document;
-var Peer = require('./peer').Peer;
+var dialogo = require('./main');
 
-exports.Document = Document;
-exports.Peer = Peer;
+var fs = require('fs');
+var path = require('path');
 
-var docs = {
-  example1: new Document({
-    firstname: 'Django',
-    lastname: 'Reinhardt'
-  })
-};
+var port = process.env.PORT || 6147;
 
-Peer.defaults.debug = true;
+function handler (req, res) {
 
-var peer1 = new Peer('one');
-var peer2 = new Peer('two');
-
-peer2.bindTo(peer1, {
-  artificialDelay: 500
-});
-
-peer1.on('load', function(url) {
-  peer1.loading = true;
-  setTimeout(function(){
-    var doc = docs[url].clone();
-    doc.url = url;
-    peer1.use(doc);
-  }, 2000);
-});
-
-peer2.load('example1', function(err){
-
-  if (err) {
-    console.log('error loading doc');
+  if (req.method !== 'GET') {
+    res.writeHead(405, 'Method not allowed');
+    res.end();
     return;
   }
-  console.log('load complete');
-  setTimeout(function(){
 
-    console.log('touching doc 1');
-    peer1.document.root.genre = 'Jazz';
-    console.log('touching doc 2');
-    peer2.document.root.genre = 'Gypsy Jazz';
-    peer2.document.root.nationality = 'French';
+  var filename, mimeType = 'text/plain';
+  if (req.url === '/') {
+    mimeType = 'text/html';
+    filename = 'index.html';
+  } else if (req.url === '/dialogo/dialogo.js') {
+    mimeType = 'text/javascript';
+    filename = '../build/bundle.js';
+  } else {
+    res.writeHead(404, 'Not found');
+    res.end();
+    return;
+  }
 
-    setTimeout(function(){
-      //peer2.document.root.genre = 'Bebop';
-      console.log('touching doc 1');
-      peer1.document.root.nationality = 'Belgian';
+  fs.readFile(path.join(__dirname, filename), function (err, data) {
+    if (err) {
+      res.writeHead(500);
+      return res.end('Error loading ' + req.url);
+    }
+    res.writeHead(200, { 'content-type': mimeType});
+    res.end(data);
+  });
+}
 
-      setTimeout(function(){
-        //peer2.document.root.genre = 'Bebop';
-        console.log('touching doc 2');
-        peer2.document.root.nationality = 'Austrian';
-      }, 4000);
+var app = require('http').createServer(handler);
+var io = require('socket.io')(app);
+app.listen(port);
+console.log('listening at http://localhost:' + port);
 
-    }, 8000);
+var storage = new dialogo.Storage();
 
-  }, 4000);
+dialogo.Peer.defaults.debug = process.env.PEERLOG;
+var peers = [];
 
+io.on('connection', function (socket) {
+
+  var peer = socket.peer = new dialogo.Peer('server' + (peers.length + 1));
+  peers.push(peer);
+
+  peer.storage = storage;
+  //socket.emit('news', { hello: 'world' });
+  socket.on('dialogo.message', function (message) {
+    peer.receive(message);
+  });
+  peer.on('message', function(message){
+    socket.emit('dialogo.message', message);
+  });
 });

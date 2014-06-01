@@ -1,0 +1,244 @@
+<html>
+  <head>
+    <title>Dialogo</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/codemirror/4.2.0/codemirror.css" type="text/css" media="screen" />
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/codemirror/4.2.0/codemirror.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/codemirror/4.2.0/mode/javascript/javascript.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/dialogo/dialogo.js"></script>
+    <style>
+      .json-editor {
+        border: 1px solid #ddd;
+        width: 100%;
+        height: 100%;
+      }
+      div.CodeMirror {
+        height: 100%;
+      }
+      .json-error {
+        background: #ffdfdf;
+        -webkit-transition: all 1s;
+        transition: all 1s;
+      }
+      .error-message {
+        background: #ffefef;
+        font-weight: bold;
+        color: red;
+        font-size: smaller;
+        min-height: 20px;
+        display: block;
+        position: absolute;
+        bottom: 5px;
+        left: 45px;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="json-editor">
+      <textarea id="json">
+          loading...
+      </textarea>
+      <span class="error-message"></span>
+    </div>
+    <script>
+      jsondiffpatch = dialogo.jsondiffpatch;
+      var dom = {
+          addClass: function(el, className) {
+              if (el.classList) {
+                  el.classList.add(className);
+              } else {
+                  el.className += ' ' + className;
+              }
+          },
+          removeClass: function(el, className) {
+              if (el.classList) {
+                  el.classList.remove(className);
+              } else {
+                  el.className = el.className.replace(new RegExp('(^|\\b)' +
+                      className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+              }
+          },
+          text: function(el, text) {
+              if (typeof el.textContent !== 'undefined') {
+                  if (typeof text === 'undefined') {
+                      return el.textContent;
+                  }
+                  el.textContent = text;
+              } else {
+                  if (typeof text === 'undefined') {
+                      return el.innerText;
+                  }
+                  el.innerText = text;
+              }
+          },
+          on: function(el, eventName, handler) {
+              if (el.addEventListener) {
+                  el.addEventListener(eventName, handler);
+              } else {
+                  el.attachEvent('on' + eventName, handler);
+              }
+          },
+          ready: function(fn) {
+              if (document.addEventListener) {
+                  document.addEventListener('DOMContentLoaded', fn);
+              } else {
+                  document.attachEvent('onreadystatechange', function() {
+                      if (document.readyState === 'interactive') { fn(); }
+                  });
+              }
+          }
+      };
+
+      var peer = new dialogo.Peer('browser');
+      peer.debug = 1;
+
+      function compare(){
+        if (peer.document.isEmpty) {
+          return;
+        }
+        try {
+          var doc = areas.index.parse();
+          var delta = jsondiffpatch.diff(doc, peer.document.root);
+          if (!delta) {
+            return;
+          }
+          peer.document.root = doc;
+        } catch(err) {
+            // invalid json, ignore
+        }
+      }
+
+      var trim = function(str) {
+          return str.replace(/^\s+|\s+$/g, '');
+      };
+
+      var JsonArea = function JsonArea(element) {
+          this.element = element;
+          this.container = element.parentNode;
+          var self = this;
+          var prettifyButton = this.container.querySelector('.prettyfy');
+          if (prettifyButton) {
+              dom.on(prettifyButton, 'click', function() {
+                  self.prettyfy();
+              });
+          }
+      };
+
+      JsonArea.prototype.error = function(err) {
+          var errorElement = this.container.querySelector('.error-message');
+          if (!err) {
+              dom.removeClass(this.container, 'json-error');
+              errorElement.innerHTML = '';
+              return;
+          }
+          errorElement.innerHTML = err+'';
+          dom.addClass(this.container, 'json-error');
+      };
+
+      JsonArea.prototype.getValue = function(){
+          if (!this.editor) { return this.element.value; }
+          return this.editor.getValue();
+      };
+
+      JsonArea.prototype.parse = function() {
+          var txt = trim(this.getValue());
+          try {
+              this.error(false);
+              if (/^\d+(.\d+)?(e[\+\-]?\d+)?$/i.test(txt) ||
+                  /^(true|false)$/.test(txt) ||
+                  /^["].*["]$/.test(txt) ||
+                  /^[\{\[](.|\n)*[\}\]]$/.test(txt)) {
+                  return JSON.parse(txt, jsondiffpatch.dateReviver);
+              }
+              return this.getValue();
+          } catch(err) {
+              this.error(err);
+              throw err;
+          }
+      };
+
+      JsonArea.prototype.setValue = function(value) {
+        if (typeof value !== 'string') {
+          value = JSON.stringify(value, null, 2);
+        }
+        if (!this.editor) {
+          if (this.element.value !== value) {
+            this.element.value = value;
+          }
+          return;
+        }
+        if (this.getValue() !== value) {
+          var selection = this.editor.listSelections();
+          this.editor.setValue(value);
+          this.editor.setSelections(selection);
+        }
+      };
+
+      JsonArea.prototype.prettyfy = function() {
+          var value = this.parse();
+          var prettyJson = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+          this.setValue(prettyJson);
+      };
+
+      /* global CodeMirror */
+      JsonArea.prototype.makeEditor = function(readOnly) {
+          if (typeof CodeMirror === 'undefined') { return; }
+          this.editor = CodeMirror.fromTextArea(this.element, {
+              mode:  'javascript',
+              json: true,
+              readOnly: readOnly,
+              lineNumbers: true
+          });
+          if (!readOnly) {
+              this.editor.on('change', compare);
+          }
+      };
+
+      var areas = {
+          index: new JsonArea(document.getElementById('json'))
+      };
+
+      areas.index.makeEditor();
+      areas.index.editor.focus()
+      areas.index.editor.setCursor({ line: 0, ch: 1 });
+
+      dom.on(areas.index.element, 'change', compare);
+      dom.on(areas.index.element, 'keyup', compare);
+
+      function start() {
+        var socket = io(document.location.href);
+        socket.on('error', function(err) {
+          console.error('CONNECTION ERROR');
+          areas.index.error('CONNECTION ERROR: ' + err);
+        });
+        socket.on('connect', function(err) {
+          console.log('CONNECTED');
+          peer.load('index', { create: true}, function(err) {
+            if (err) {
+              areas.index.error('LOADING ERROR: ', err.toString);
+              return;
+            }
+            areas.index.setValue(peer.document.root);
+            peer.on('change', function() {
+              // got changes from peers
+              areas.index.setValue(peer.document.root);
+            });
+          });
+        });
+        socket.on('dialogo.message', function (message) {
+          console.log('receiving:', message);
+          peer.receive(message);
+        });
+        peer.on('message', function(message) {
+          socket.emit('dialogo.message', message);
+          console.log('sending:', message);
+        });
+      }
+
+      dom.ready(setTimeout(start));
+
+    </script>
+  </body>
+</html>

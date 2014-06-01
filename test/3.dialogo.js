@@ -1,12 +1,11 @@
 /* global require, describe, before, it */
-var expect = expect || require('expect.js');
-var dialogo = dialogo || require('../src/main');
-var jsondiffpatch = jsondiffpatch || require('jsondiffpatch');
+var expect = (typeof window !== 'undefined' && window.expect) ? window.expect : require('expect.js');
+var jsondiffpatch = jsondiffpatch || require('' + 'jsondiffpatch');
+var dialogo = dialogo || require('../src' + '/main');
+
 var testutil = require('./testutil');
 expect.Assertion.prototype.deepEqual = testutil.assertionDeepEqual;
-var arrayForEach = testutil.arrayForEach;
 var forEach = testutil.forEach;
-var objectKeys = testutil.objectKeys;
 
 var Peer = dialogo.Peer;
 var Document = dialogo.Document;
@@ -16,31 +15,45 @@ Peer.defaults.debug = process.env.PEERLOG;
 
 function onSyncComplete(peers, callback) {
   var done = false;
-  forEach(peers, function(peer) {
-    peer.once('sync', function(){
-      if (done) {
+
+  var onPeerSync = function(peer){
+    if (peer.testSpec.ignoreSyncs) {
+      peer.testSpec.ignoreSyncs--;
+      return;
+    }
+    peer.removeListener('sync', onPeerSync);
+    if (done) {
+      return;
+    }
+    var allSync = true;
+    var stats = {
+      sent: {
+        total: 0,
+        max: 0
+      }
+    };
+    forEach(peers, function(peer2) {
+      if (!peer2.synchronized) {
+        allSync = false;
         return;
       }
-      var allSync = true;
-      var stats = {
-        sent: {
-          total: 0,
-          max: 0
-        }
-      };
+      var peerSent = peer2.counters.messages.sent;
+      stats.sent.total += peerSent;
+      stats.sent.max = Math.max(stats.sent.max, peerSent);
+    });
+    if (allSync) {
+      done = true;
       forEach(peers, function(peer2) {
-        if (!peer2.synchronized) {
-          allSync = false;
-          return;
-        }
-        var peerSent = peer2.counters.messages.sent;
-        stats.sent.total += peerSent;
-        stats.sent.max = Math.max(stats.sent.max, peerSent);
+        // stop watching, test is over
+        peer2.stop();
       });
-      if (allSync) {
-        done = true;
-        callback(null, stats);
-      }
+      callback(null, stats);
+    }
+  };
+
+  forEach(peers, function(peer) {
+    peer.on('sync', function(){
+      onPeerSync(peer);
     });
   });
 }
@@ -125,21 +138,32 @@ describe('dialogo', function(){
               }
 
               forEach(peers, function(peer){
+                var url, options;
 
                 // peers with initial load
                 if (peer.testSpec.load) {
-                  var url = peer.testSpec.load, options = {};
+                  url = peer.testSpec.load;
+                  options = {};
                   if (typeof url !== 'string') {
-                    url = url.url;
                     options = url.options;
+                    url = url.url;
                   }
                   peer.load(url, options);
                 }
 
                 // make changes to peer documents
                 if (peer.testSpec.patch) {
-                  jsondiffpatch.patch(peer.document.root, peer.testSpec.patch);
-                  peer.scan();
+                  if (peer.testSpec.load) {
+                    // patch after load is complete
+                    peer.testSpec.ignoreSyncs = (peer.testSpec.ignoreSyncs || 0) + 1;
+                    peer.once('loaded', function(){
+                      peer.document.root = jsondiffpatch.patch(peer.document.root, peer.testSpec.patch);
+                      peer.scan();
+                    });
+                  } else {
+                    peer.document.root = jsondiffpatch.patch(peer.document.root, peer.testSpec.patch);
+                    peer.scan();
+                  }
                 }
 
               });

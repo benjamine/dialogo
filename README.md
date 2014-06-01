@@ -19,42 +19,27 @@ Specs (built using mocha.js) run on travis-ci: [![Build Status](https://travis-c
 
 you can test them using ```npm test```, or on browsers opening [Test page](http://benjamine.github.io/dialogo/test/test.html)
 
-Introductory Examples
+Working Demo
 --------------------
 
-on server:
+- run ```npm start```
+- open http://localhost:6147 in 2 (or more!) browser windows
+- edit and see changes sync in realtime
 
-``` js
-    var dialogo = require('dialogo').create();
+Note: the editor will detect if the content is JSON, or just text and use the best strategy.
+Look the browser console for details.
 
-    dialogo.documents.add('main', {
-        mountains: 4,
-        lake: {
-            color: 'blue',
-            depth: 34
-        }
-    });
+Warning
+----------
 
-    var io = require('socket.io').listen(80);
-    dialogo.connect(io);
-```
-
-on clients:
-
-``` js
-    var socket = io.connect('http://localhost');
-    var main = dialogo.create();
-    main.connect(socket);
-    main.open('main');
-    main.document.mountains = 5;
-```
+At this point this is just an experiment (very incomplete and buggy), use at your own risk.
 
 License
 --------
 
 The MIT License (MIT)
 
-Copyright (c) 2013 Benjamin Eidelman (@beneidel)
+Copyright (c) 2014 Benjamin Eidelman (@beneidel)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,7 +1,7 @@
 var jsondiffpatch = require('jsondiffpatch');
 
 function Document(root, version) {
-  this.root = typeof root == 'undefined' ? null : root;
+  this.root = typeof root === 'undefined' ? null : root;
   this.version = version || 0;
 }
 

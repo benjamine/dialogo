@@ -1,7 +1,7 @@
-/* global require, describe, before, it */
-var expect = expect || require('expect.js');
-var dialogo = dialogo || require('../src/main');
-var jsondiffpatch = jsondiffpatch || require('jsondiffpatch');
+/* global require, describe, it */
+var expect = (typeof window !== 'undefined' && window.expect) ? window.expect : require('expect.js');
+var jsondiffpatch = jsondiffpatch || require('' + 'jsondiffpatch');
+var dialogo = dialogo || require('../src' + '/main');
 
 var Peer = dialogo.Peer;
 var Document = dialogo.Document;
