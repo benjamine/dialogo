@@ -43,7 +43,7 @@
       <span class="error-message"></span>
     </div>
     <script>
-      jsondiffpatch = dialogo.jsondiffpatch;
+
       var dom = {
           addClass: function(el, className) {
               if (el.classList) {
@@ -91,8 +91,14 @@
           }
       };
 
+      /* global dialogo */
+
+      var jsondiffpatch = dialogo.jsondiffpatch;
+
       var peer = new dialogo.Peer('browser');
       peer.debug = 1;
+
+      var areas = {};
 
       function compare(){
         if (peer.document.isEmpty) {
@@ -196,24 +202,28 @@
           }
       };
 
-      var areas = {
-          index: new JsonArea(document.getElementById('json'))
-      };
+      areas.index = new JsonArea(document.getElementById('json'));
 
       areas.index.makeEditor();
-      areas.index.editor.focus()
+      areas.index.editor.focus();
       areas.index.editor.setCursor({ line: 0, ch: 1 });
 
       dom.on(areas.index.element, 'change', compare);
       dom.on(areas.index.element, 'keyup', compare);
 
       function start() {
+        /* global io */
         var socket = io(document.location.href);
         socket.on('error', function(err) {
           console.error('CONNECTION ERROR');
           areas.index.error('CONNECTION ERROR: ' + err);
         });
         socket.on('connect', function(err) {
+          if (err) {
+            console.error('CONNECTION ERROR');
+            areas.index.error('CONNECTION ERROR: ' + err);
+            return;
+          }
           console.log('CONNECTED');
           peer.load('index', { create: true}, function(err) {
             if (err) {

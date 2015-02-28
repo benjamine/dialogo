@@ -1,6 +1,13 @@
+var util = require('util');
 var events = require('events');
 var jsondiffpatch = require('jsondiffpatch');
-var util = require('util');
+var jsondiffpatch = require('jsondiffpatch');
+if (process.browser) {
+  // include diff_match_patch in the browser bundle (for text diffs)
+  /* jshint ignore: start */
+  window.diff_match_patch = window.diff_match_patch || require('jsondiffpatch/public/external/diff_match_patch_uncompressed');
+  /* jshint ignore: end */
+}
 
 var Doc = require('./doc').Doc;
 
