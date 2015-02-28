@@ -52,8 +52,8 @@ Peer.prototype.syncComplete = function () {
   }
   this.synchronized = true;
   this.log('sync complete');
-  this.emit('sync');
   this.watch();
+  this.emit('sync');
 };
 
 Peer.prototype.use = function(doc) {
