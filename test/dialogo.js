@@ -1,6 +1,8 @@
-/* global require, describe, before, it */
-var expect = (typeof window !== 'undefined' && window.expect) ? window.expect : require('expect.js');
-var dialogo = (typeof window !== 'undefined') ? window.dialogo : require('../src/' + 'main.js');
+/*
+ * mocha's bdd syntax is inspired in RSpec
+ *   please read: http://betterspecs.org/
+ */
+require('./util/globals');
 var jsondiffpatch = dialogo.jsondiffpatch;
 
 var testutil = require('./testutil');
@@ -8,7 +10,7 @@ expect.Assertion.prototype.deepEqual = testutil.assertionDeepEqual;
 var forEach = testutil.forEach;
 
 var Peer = dialogo.Peer;
-var Document = dialogo.Document;
+var Doc = dialogo.Doc;
 var Storage = dialogo.Storage;
 
 Peer.defaults.debug = process.env.PEERLOG;
@@ -74,7 +76,7 @@ describe('dialogo', function(){
             var peers = this.peers = {};
             var hubPeer;
             forEach(example.peers, function(peerSpec, peerName) {
-              var peerDoc = peerSpec.doc ? new Document(peerSpec.doc.root, peerSpec.doc.version) : null;
+              var peerDoc = peerSpec.doc ? new Doc(peerSpec.doc.root, peerSpec.doc.version) : null;
               var peer = new Peer(peerName, peerDoc);
               peers[peerName] = peer;
               peer.testSpec = peerSpec;

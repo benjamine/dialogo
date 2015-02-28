@@ -4,8 +4,12 @@
   "description": "Javascript Differential Synchronization",
   "main": "./src/main.js",
   "scripts": {
-    "test": "npm install && ./node_modules/.bin/gulp test test-browser",
-    "start": "npm install && ./node_modules/.bin/gulp build && node ./src/index.js"
+    "test": "gulp test && gulp test-browser",
+    "bump": "gulp bump",
+    "cover": "istanbul cover --root src gulp test",
+    "cover-report": "open coverage/lcov-report/index.html",
+    "cover-publish": "istanbul cover _mocha --report lcovonly && codeclimate < coverage/lcov.info",
+    "start": "gulp bundle && node ./src/index.js"
   },
   "repository": {
     "type": "git",
@@ -24,33 +28,16 @@
     "node": ">=0.10"
   },
   "devDependencies": {
+    "bulk-require": "^0.2.1",
+    "codeclimate-test-reporter": "0.0.3",
     "expect.js": "~0.3.1",
-    "karma-script-launcher": "~0.1.0",
-    "karma-chrome-launcher": "~0.1.2",
-    "karma-firefox-launcher": "~0.1.3",
-    "karma-html2js-preprocessor": "~0.1.0",
-    "karma-mocha": "~0.1.1",
-    "karma-phantomjs-launcher": "~0.1.2",
-    "karma": "~0.10.9",
-    "karma-spec-reporter": "~0.0.10",
-    "gulp": "~3.5.6",
-    "gulp-util": "~2.2.14",
-    "gulp-browserify": "~0.4.4",
-    "gulp-rename": "~1.1.0",
-    "gulp-uglify": "~0.2.1",
-    "gulp-mocha": "~0.4.1",
-    "gulp-load-plugins": "~0.3.0",
-    "gulp-karma": "0.0.2",
-    "mocha": "~1.17.1",
-    "karma-growler-reporter": "~0.0.1",
-    "gulp-clean": "~0.2.4",
-    "gulp-jshint": "~1.5.0",
-    "jshint-stylish": "~0.1.5",
-    "gulp-replace": "~0.2.0",
-    "gulp-plumber": "~0.5.6"
+    "fiberglass": "~0.0.11",
+    "gulp": "^3.8.8",
+    "istanbul": "^0.3.2",
+    "mocha": "^1.21.4"
   },
   "dependencies": {
-    "jsondiffpatch": "~0.1.6",
+    "jsondiffpatch": "~0.1.27",
     "socket.io": "~1.0.2"
   },
   "homepage": "https://github.com/benjamine/dialogo"

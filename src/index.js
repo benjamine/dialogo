@@ -14,13 +14,14 @@ function handler (req, res) {
     return;
   }
 
-  var filename, mimeType = 'text/plain';
+  var filename;
+  var mimeType = 'text/plain';
   if (req.url === '/') {
     mimeType = 'text/html';
     filename = 'index.html';
-  } else if (req.url === '/dialogo/dialogo.js') {
+  } else if (req.url === '/build/dialogo.js') {
     mimeType = 'text/javascript';
-    filename = '../build/bundle.js';
+    filename = '../public/build/dialogo.js';
   } else {
     res.writeHead(404, 'Not found');
     res.end();

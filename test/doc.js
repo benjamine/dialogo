@@ -1,19 +1,21 @@
-/* global require, describe, it */
-var expect = (typeof window !== 'undefined' && window.expect) ? window.expect : require('expect.js');
-var dialogo = (typeof window !== 'undefined') ? window.dialogo : require('../src/' + 'main.js');
+/*
+ * mocha's bdd syntax is inspired in RSpec
+ *   please read: http://betterspecs.org/
+ */
+require('./util/globals');
 var jsondiffpatch = dialogo.jsondiffpatch;
 
-var Document = dialogo.Document;
+var Doc = dialogo.Doc;
 
-describe('Document', function(){
+describe('Doc', function(){
   describe('#version', function(){
     it('starts at 0', function(){
-        expect(new Document().version).to.be(0);
+        expect(new Doc().version).to.be(0);
     });
   });
   describe('#clone', function(){
     it('creates an exact copy', function(){
-      var doc = new Document({
+      var doc = new Doc({
         a: 1,
         b: [3, 4, true],
         c: {
@@ -28,8 +30,8 @@ describe('Document', function(){
   });
   describe('.empty', function(){
     it('is an empty document', function(){
-      expect(Document.empty).to.be.a(Document);
-      expect(Document.empty.isEmpty).to.be(true);
+      expect(Doc.empty).to.be.a(Doc);
+      expect(Doc.empty.isEmpty).to.be(true);
     });
   });
 });

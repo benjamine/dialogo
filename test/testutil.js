@@ -1,5 +1,8 @@
-
-var dialogo = (typeof window !== 'undefined') ? window.dialogo : require('../src/' + 'main.js');
+/*
+ * mocha's bdd syntax is inspired in RSpec
+ *   please read: http://betterspecs.org/
+ */
+require('./util/globals');
 var jsondiffpatch = dialogo.jsondiffpatch;
 
 var isArray = (typeof Array.isArray === 'function') ?

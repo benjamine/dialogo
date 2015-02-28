@@ -2,15 +2,15 @@ var events = require('events');
 var jsondiffpatch = require('jsondiffpatch');
 var util = require('util');
 
-var Document = require('./document').Document;
+var Doc = require('./doc').Doc;
 
 function Peer(name, document){
   events.EventEmitter.call(this);
-  if (name instanceof Document) {
+  if (name instanceof Doc) {
     this.document = name;
   } else {
     this.name = name;
-    this.document = document || Document.empty;
+    this.document = document || Doc.empty;
   }
   this.counters = {
     messages: {
@@ -371,7 +371,7 @@ Peer.prototype.respond = function(message, callback) {
     // peer wants to load a full document
     this.log('got document load request');
     var url = message.url;
-    var sendDocument = function(){
+    var sendDoc = function(){
       var doc = self.document.clone();
       self.watch();
       callback(null, {
@@ -396,13 +396,13 @@ Peer.prototype.respond = function(message, callback) {
           return;
         }
         self.log('document loaded, sending to peer', self.document);
-        sendDocument();
+        sendDoc();
         return;
       });
       return;
     }
     this.log('sending document', this.document);
-    sendDocument();
+    sendDoc();
     return;
   }
 
@@ -418,7 +418,7 @@ Peer.prototype.respond = function(message, callback) {
       callback();
       return;
     }
-    this.document = new Document(message.document.root, message.document.version);
+    this.document = new Doc(message.document.root, message.document.version);
     this.document.url = message.document.url;
     this.createShadow();
     this.log('got document', this.document);

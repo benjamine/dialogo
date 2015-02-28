@@ -1,4 +1,4 @@
 
-require('./document');
+require('./doc');
 require('./peer');
 require('./dialogo');

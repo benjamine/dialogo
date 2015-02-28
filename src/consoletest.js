@@ -1,12 +1,12 @@
 
-var Document = require('./document').Document;
+var Doc = require('./doc').Doc;
 var Peer = require('./peer').Peer;
 
-exports.Document = Document;
+exports.Doc = Doc;
 exports.Peer = Peer;
 
 var docs = {
-  example1: new Document({
+  example1: new Doc({
     firstname: 'Django',
     lastname: 'Reinhardt'
   })

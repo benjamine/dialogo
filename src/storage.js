@@ -1,5 +1,5 @@
 
-var Document = require('./document').Document;
+var Doc = require('./doc').Doc;
 
 function Storage(documents) {
   // base implementation is in-memory
@@ -18,8 +18,8 @@ Storage.prototype.get = function (url, options, callback) {
     this.documents[url] = {};
   }
   var doc = this.documents[url];
-  if (!(doc instanceof Document)) {
-    doc = this.documents[url] = new Document(doc);
+  if (!(doc instanceof Doc)) {
+    doc = this.documents[url] = new Doc(doc);
   }
   doc.url = url;
   callback(null, doc);
@@ -29,8 +29,8 @@ Storage.prototype.put = function (url, doc, options, callback) {
   if (!this.documents) {
     this.documents = {};
   }
-  if (!(doc instanceof Document)) {
-    doc = new Document(doc);
+  if (!(doc instanceof Doc)) {
+    doc = new Doc(doc);
   }
   doc.url = url;
   this.documents[url] = doc.clone();
